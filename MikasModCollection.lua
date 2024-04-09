@@ -266,6 +266,19 @@ local function remove_prefix(name, prefix)
     end
 end
 
+local function randomFromTable(source)
+    local keys = {} 
+
+    for k in pairs(source) do
+        table.insert(keys, k)
+    end
+    
+    local choiceIndex = math.random(1,#keys) 
+    local choiceKey = keys[choiceIndex] 
+    local choice = source[choiceKey]
+    return {key = choiceKey, value = choice}
+end
+
 local letters = { "a", "b", "c", "d", "e", "é", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s",
     "t", "u", "v", "w", "x", "y", "z" }
 
@@ -288,13 +301,6 @@ local enhancements = {
     G.P_CENTERS.m_lucky
 }
 
-local seals = {
-    "Gold",
-    "Red",
-    "Blue",
-    "Purple"
-}
-
 local function tables_equal(a, b)
     return table.concat(a) == table.concat(b)
 end
@@ -305,6 +311,20 @@ local function tables_copy(t)
         t2[k] = v
     end
     return t2
+end
+
+local function Add_Negative_Random()
+    local eligible_jokers = {}
+    for k, v in pairs(G.jokers.cards) do
+        if v.ability.set == 'Joker' and (not v.edition) then
+            table.insert(eligible_jokers, v)
+        end
+    end
+    --sendDebugMessage("Eligible jokers: " .. #eligible_jokers)
+    if #eligible_jokers>=1 then
+        local eligible_joker_card = pseudorandom_element(eligible_jokers, pseudoseed("blackseal"))
+        eligible_joker_card:set_edition({negative = true})
+    end
 end
 
 -- Save attributes
@@ -3093,7 +3113,9 @@ function SMODS.INIT.MikasModCollection()
                                 _card:juice_up(0.3, 0.5)
                                 -- Add seal and edition
                                 if _card.ability.seal == nil then
-                                    _card:set_seal(pseudorandom_element(seals, pseudoseed('commander')), nil, true)
+                                    local seal = ""
+                                    seal=randomFromTable(G.P_SEALS)
+                                    _card:set_seal(pseudorandom_element(seal.key, pseudoseed('commander')), nil, true)
                                 end
                                 if _card.edition == nil then
                                     local edition = poll_edition('commander', nil, true, true)
